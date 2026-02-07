@@ -12,16 +12,14 @@ load_dotenv()
 
 def load_rag():
 
-    # ---------------------------
     # Embeddings
-    # ---------------------------
+    
     embeddings = HuggingFaceEmbeddings(
         model_name="sentence-transformers/all-mpnet-base-v2"
     )
 
-    # ---------------------------
     # Vector DB
-    # ---------------------------
+
     db = Chroma(
         persist_directory="db",
         embedding_function=embeddings
@@ -29,17 +27,14 @@ def load_rag():
 
     retriever = db.as_retriever(search_kwargs={"k": 3})
 
-    # ---------------------------
     # LLM (Groq)
-    # ---------------------------
+
     llm = ChatGroq(
         groq_api_key=os.getenv("GROQ_API_KEY"),
         model_name="llama-3.1-8b-instant"
     )
 
-    # ---------------------------
     # Prompt
-    # ---------------------------
     prompt_template = """
 You are a company policy assistant.
 
@@ -61,9 +56,8 @@ Answer:
         input_variables=["context", "question"]
     )
 
-    # ---------------------------
     # QA Chain
-    # ---------------------------
+
     qa = RetrievalQA.from_chain_type(
         llm=llm,
         retriever=retriever,
@@ -74,9 +68,8 @@ Answer:
     return qa
 
 
-# =================================================
 # Run locally
-# =================================================
+
 if __name__ == "__main__":
 
     qa = load_rag()
