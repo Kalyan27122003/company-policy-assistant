@@ -39,6 +39,7 @@ if question:
 
     # get answer
     result = qa.invoke({"query": question})
+    st.write("DEBUG:", result["source_documents"]) 
     answer = result["result"]
 
     # show assistant
