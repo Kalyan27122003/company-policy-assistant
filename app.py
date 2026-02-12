@@ -45,8 +45,12 @@ if question:
     with st.chat_message("assistant"):
         st.write(answer)
 
-        st.markdown("**Sources:**")
-        for doc in result["source_documents"]:
-            st.write("📄", doc.metadata.get("source", "unknown"))
+        if result["source_documents"]:
+            st.markdown("**Sources:**")
+            for doc in result["source_documents"]:
+                st.write("📄", doc.metadata.get("source", "unknown"))
+        else:
+            st.write("No sources found.")
+
 
     st.session_state.messages.append({"role": "assistant", "content": answer})
