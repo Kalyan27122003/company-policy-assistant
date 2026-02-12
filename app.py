@@ -51,7 +51,7 @@ if question:
             for doc in result["source_documents"]:
                 st.write("📄", doc.metadata.get("source", "unknown"))
         else:
-            st.write("No sources found.")
+            st.write("")
 
 
     st.session_state.messages.append({"role": "assistant", "content": answer})
