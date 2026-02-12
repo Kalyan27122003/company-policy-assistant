@@ -1,8 +1,6 @@
 from ingest import load_pdfs
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-
-
 def chunk_documents():
     docs = load_pdfs()
 
@@ -14,7 +12,6 @@ def chunk_documents():
     chunks = splitter.split_documents(docs)
 
     return chunks
-
 
 if __name__ == "__main__":
     chunks = chunk_documents()

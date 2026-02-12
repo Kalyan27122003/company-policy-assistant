@@ -1,5 +1,5 @@
 from chunk import chunk_documents
-from langchain_ollama import OllamaEmbeddings
+# from langchain_ollama import OllamaEmbeddings
 from langchain_chroma import Chroma
 from langchain_community.embeddings import HuggingFaceEmbeddings
 

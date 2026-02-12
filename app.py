@@ -3,7 +3,7 @@ from src.rag_chat import load_rag
 
 st.set_page_config(page_title="Company Policy Assistant")
 
-st.title("🏢 Company Policy Assistant")
+st.title("Company Policy Assistant")
 
 # -------------------
 # Load model (cached)
