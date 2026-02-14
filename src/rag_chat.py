@@ -1,34 +1,69 @@
-from langchain_community.vectorstores import Chroma
-from langchain_groq import ChatGroq
 import os
+from dotenv import load_dotenv
+
+from langchain_community.vectorstores import Chroma
+from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_groq import ChatGroq
 
 from langchain_classic.chains.retrieval_qa.base import RetrievalQA
 from langchain_core.prompts import PromptTemplate
-from langchain_community.embeddings import HuggingFaceEmbeddings
 
-from dotenv import load_dotenv
 load_dotenv()
 
+# ---------------------------
+# CLASSIFIER PROMPT
+# ---------------------------
 
-def load_rag():
+CLASSIFIER_PROMPT = PromptTemplate(
+    template="""
+You are a classifier for company policy questions.
+
+Classify the user question into ONE of the following categories:
+HR, IT, Legal, Travel, Compensation, General
+
+Return ONLY the category name.
+
+Question:
+{question}
+
+Category:
+""",
+    input_variables=["question"]
+)
+
+
+def classify_query(llm, question: str) -> str:
+    response = llm.invoke(
+        CLASSIFIER_PROMPT.format(question=question)
+    )
+
+    category = response.content.strip()
+
+    allowed = {"HR", "IT", "Legal", "Travel", "Compensation", "General"}
+    if category not in allowed:
+        return "General"
+
+    return category
+
+
+# ---------------------------
+# LOAD RAG COMPONENTS
+# ---------------------------
+
+def load_rag_components():
 
     # Embeddings
-    
     embeddings = HuggingFaceEmbeddings(
         model_name="sentence-transformers/all-mpnet-base-v2"
     )
 
     # Vector DB
-
     db = Chroma(
         persist_directory="db",
         embedding_function=embeddings
     )
 
-    retriever = db.as_retriever(search_kwargs={"k": 3})
-
-    # LLM (Groq)
-
+    # LLM
     llm = ChatGroq(
         groq_api_key=os.getenv("GROQ_API_KEY"),
         model_name="llama-3.1-8b-instant"
@@ -56,23 +91,15 @@ Answer:
         input_variables=["context", "question"]
     )
 
-    # QA Chain
-
-    qa = RetrievalQA.from_chain_type(
-        llm=llm,
-        retriever=retriever,
-        return_source_documents=True,
-        chain_type_kwargs={"prompt": PROMPT}
-    )
-
-    return qa
+    return llm, db, PROMPT
 
 
-# Run locally
-
+# ---------------------------
+# RUN LOCALLY (CLI)
+# ---------------------------
 if __name__ == "__main__":
 
-    qa = load_rag()
+    llm, db, PROMPT = load_rag_components()
 
     print("Company Policy Assistant Ready!")
     print("Type 'exit' to stop")
@@ -83,11 +110,23 @@ if __name__ == "__main__":
         if query.lower() == "exit":
             break
 
+        # Step 2: Classification
+        policy_type = classify_query(llm, query)
+        print(f"[Classifier] Policy type → {policy_type}")
+
+        retriever = db.as_retriever(search_kwargs={"k": 3})
+
+        qa = RetrievalQA.from_chain_type(
+            llm=llm,
+            retriever=retriever,
+            return_source_documents=True,
+            chain_type_kwargs={"prompt": PROMPT}
+        )
+
         result = qa.invoke({"query": query})
 
         print("\nAnswer:\n", result["result"])
 
         print("\nSources:")
         for doc in result["source_documents"]:
-            print("-", doc.metadata["source"])
-        
+            print("-", doc.metadata.get("source", "unknown"))

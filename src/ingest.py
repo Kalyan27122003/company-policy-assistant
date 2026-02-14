@@ -18,10 +18,23 @@ def load_pdfs():
 
             for doc in docs:
                 doc.metadata["source"] = file
-
+                doc.metadata["policy_type"] = infer_policy_type(file)
             documents.extend(docs)
 
     return documents
+def infer_policy_type(filename: str):
+    name = filename.lower()
+    if "hr" in name:
+        return "HR"
+    if "it" in name or "security" in name:
+        return "IT"
+    if "legal" in name or "compliance" in name:
+        return "Legal"
+    if "travel" in name or "expense" in name:
+        return "Travel"
+    if "compensation" in name or "pay" in name:
+        return "Compensation"
+    return "General"
 
 
 if __name__ == "__main__":
