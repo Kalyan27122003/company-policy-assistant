@@ -1,18 +1,8 @@
 import streamlit as st
-from src.rag_chat import load_rag
+from src.rag_chat import rag_graph
 
-st.set_page_config(page_title="Company Policy Assistant")
-
-st.title("Company Policy Assistant")
-
-# -------------------
-# Load model (cached)
-# -------------------
-@st.cache_resource
-def get_qa():
-    return load_rag()
-
-qa = get_qa()
+st.set_page_config(page_title="Agentic Company Policy Assistant")
+st.title("Agentic Company Policy Assistant")
 
 # -------------------
 # Chat history
@@ -20,7 +10,6 @@ qa = get_qa()
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# Show old messages
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.write(msg["content"])
@@ -28,30 +17,36 @@ for msg in st.session_state.messages:
 # -------------------
 # Chat input
 # -------------------
-question = st.chat_input("Ask your question...")
+question = st.chat_input("Ask your policy question...")
 
 if question:
 
-    # show user msg
-    st.session_state.messages.append({"role": "user", "content": question})
+    # User message
+    st.session_state.messages.append(
+        {"role": "user", "content": question}
+    )
     with st.chat_message("user"):
         st.write(question)
 
-    # get answer
-    result = qa.invoke({"query": question})
-    answer = result["result"]
+    # 🔥 Agentic RAG call
+    result = rag_graph.invoke({
+        "question": question
+    })
 
-    # show assistant
+    answer = result["answer"]
+    policy_type = result["policy_type"]
+    sources = result["sources"]
+
+    # Assistant message
     with st.chat_message("assistant"):
         st.write(answer)
+        st.markdown(f"**Policy Type:** `{policy_type}`")
 
-        if result["source_documents"]:
+        if sources:
             st.markdown("**Sources:**")
-            for doc in result["source_documents"]:
-                st.write("📄", doc.metadata.get("source", "unknown"))
-        else:
-            st.write("")
+            for src in sources:
+                st.write("📄", src)
 
-
-    st.session_state.messages.append({"role": "assistant", "content": answer})
-
+    st.session_state.messages.append(
+        {"role": "assistant", "content": answer}
+    )

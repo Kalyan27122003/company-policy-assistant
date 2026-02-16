@@ -1,5 +1,13 @@
-venv/
+
+# Python
 __pycache__/
-db/
-*.sqlite3
+*.pyc
+venv/
 .env
+
+# Vector DB
+db/
+
+# OS files
+.DS_Store
+Thumbs.db

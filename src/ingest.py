@@ -1,46 +1,51 @@
 import os
-from langchain_community.document_loaders import PyPDFLoader
+from langchain_core.documents import Document
 
-DATA_PATH = "data"
+# Folder where markdown files are stored
+DATA_PATH = "data_markdown"
 
 
-def load_pdfs():
+def load_markdown_files():
+    """
+    Load all Markdown (.md) files from data_markdown directory
+    and convert them into LangChain Document objects.
+    """
     documents = []
 
+    if not os.path.exists(DATA_PATH):
+        raise FileNotFoundError(f"Markdown directory not found: {DATA_PATH}")
+
     for file in os.listdir(DATA_PATH):
-        if file.endswith(".pdf"):
-            path = os.path.join(DATA_PATH, file)
+        if file.lower().endswith(".md"):
+            file_path = os.path.join(DATA_PATH, file)
 
-            print(f"Loading {file}...")
+            print(f"Loading Markdown file: {file}")
 
-            loader = PyPDFLoader(path)
-            docs = loader.load()
+            with open(file_path, "r", encoding="utf-8") as f:
+                content = f.read()
 
-            for doc in docs:
-                doc.metadata["source"] = file
-                doc.metadata["policy_type"] = infer_policy_type(file)
-            documents.extend(docs)
+            doc = Document(
+                page_content=content,
+                metadata={
+                    "source": file,
+                    "file_type": "markdown"
+                }
+            )
+
+            documents.append(doc)
+
+    if not documents:
+        raise ValueError("No Markdown files found in data_markdown folder.")
 
     return documents
-def infer_policy_type(filename: str):
-    name = filename.lower()
-    if "hr" in name:
-        return "HR"
-    if "it" in name or "security" in name:
-        return "IT"
-    if "legal" in name or "compliance" in name:
-        return "Legal"
-    if "travel" in name or "expense" in name:
-        return "Travel"
-    if "compensation" in name or "pay" in name:
-        return "Compensation"
-    return "General"
 
 
+# -------------------------------------------------
+# Run standalone (for testing)
+# -------------------------------------------------
 if __name__ == "__main__":
-    docs = load_pdfs()
+    docs = load_markdown_files()
 
-    print("\nTotal pages loaded:", len(docs))
-
+    print(f"\nTotal markdown documents loaded: {len(docs)}")
     print("\nSample content:\n")
-    print(docs[0].page_content[:400])
+    print(docs[0].page_content[:500])
