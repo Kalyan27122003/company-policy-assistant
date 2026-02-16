@@ -1,5 +1,7 @@
 import streamlit as st
-from src.rag_chat import rag_graph
+from src.rag_chat import load_rag
+qa = load_rag()
+
 
 st.set_page_config(page_title="Agentic Company Policy Assistant")
 st.title("Agentic Company Policy Assistant")
@@ -29,9 +31,8 @@ if question:
         st.write(question)
 
     # 🔥 Agentic RAG call
-    result = rag_graph.invoke({
-        "question": question
-    })
+    result = qa.invoke({"query": question})
+
 
     answer = result["answer"]
     policy_type = result["policy_type"]
